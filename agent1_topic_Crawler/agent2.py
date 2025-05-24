@@ -1,17 +1,16 @@
-import openai
-from openai import OpenAI
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# 👇 TEMPORARY: replace with your real OpenAI key directly
+client = OpenAI(api_key="da104e4458ae76858573c0c7fe")
 
 app = FastAPI()
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,28 +27,25 @@ class BlogInput(BaseModel):
 
 @app.post("/generate-blog")
 def generate_blog(data: BlogInput):
-    prompt = f"""
-Write a blog post on the topic below:
+    prompt = f"""Write a blog post:
 
 Title: {data.title}
 Summary: {data.summary}
-Trending because: {data.reason_trending}
+Trending Because: {data.reason_trending}
 Source: {data.source_link}
 
-Structure it with:
-- Engaging introduction
-- 2–3 subheadings
-- Clear conclusion
-Tone: professional but human
+Structure:
+- Catchy introduction
+- 2–3 detailed subheadings
+- Strong conclusion
+Tone: Professional and engaging.
 """
-
     try:
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
-        blog = response.choices[0].message.content
-        return {"blog": blog}
+        return {"blog": response.choices[0].message.content}
     except Exception as e:
         return {"error": str(e)}
